@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { Router } from 'react-router'
 import DevTools from './DevTools'
 import { Route } from 'react-router'
+import ProductDashBoard from './product/component/ProductDashboard';
 
 const Product = () => <div className="App">
     <header className="App-header">
@@ -22,7 +23,7 @@ class App extends Component {
             <div>
                 <Provider store={this.props.store} >
                     <Router history={this.props.history}>
-                        <Route path={'/'} component={Product} />
+                        <Route path={'/'} component={ProductDashBoard} />
                     </Router>
                 </Provider>
                 <DevTools/>
