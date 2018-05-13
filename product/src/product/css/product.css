@@ -1,0 +1,24 @@
+.modal-label{
+    display: block;
+}
+
+.product-box{
+    width: 200px;
+    height: 200px;
+    background-color: lightblue;
+}
+
+.product-container{
+    float: left;
+    margin: 20px 20px;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.product-add-button{
+    float:right;
+}
+
+.button-container{
+    margin: 20px 20px;
+}
