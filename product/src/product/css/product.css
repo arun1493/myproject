@@ -22,3 +22,8 @@
 .button-container{
     margin: 20px 20px;
 }
+
+.delete-button{
+    width: 25px;
+    height: 10px;
+}

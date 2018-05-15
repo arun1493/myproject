@@ -6,11 +6,30 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme';
 import {PropTypes} from 'prop-types';
 import '../css/product.css';
+import 'whatwg-fetch';
+import _ from 'lodash';
 
 class Product extends React.Component {
 
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)};
+    }
+
+    componentDidMount() {
+        fetch('http://localhost:8000/api/getProducts', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                _.map(data.body, (entry, index) => {
+                    this.props.fields.push(entry);
+                });
+            })
     }
 
     state = {
@@ -49,9 +68,42 @@ class Product extends React.Component {
 
     createProduct = (fields) => {
         const productData = this.getProductDetails();
-        fields.push(productData);
+        fetch('http://localhost:8000/api/createProduct', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(productData)
+        })
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                const id = data.body._id;
+                productData._id = id;
+                fields.push(productData);
+            });
         this.handleClose();
         this.clearProductDetails();
+    };
+
+    deleteProduct = (index) => {
+        const productId = this.props.fields.get(index)._id;
+        let that = this;
+        fetch(`http://localhost:8000/api/deleteProduct/${productId}`, {
+            method: 'delete',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                that.props.fields.remove(index);
+            })
+
+
     };
 
     render() {
@@ -80,20 +132,22 @@ class Product extends React.Component {
                 autoScrollBodyContent={true}
             >
                 <form onSubmit={this.submit} id={'productDataForm'}>
-                    <label className="modal-label" htmlFor="title">Title</label>
-                    <input name={'title'} type={'text'}/>
-                    <label className="modal-label" htmlFor="id">Id</label>
-                    <input name={'id'} type={'text'}/>
+                    <label className="modal-label" htmlFor="group">Group</label>
+                    <input name={'group'} type={'text'}/>
+                    <label className="modal-label" htmlFor="code">Code</label>
+                    <input name={'code'} type={'text'}/>
                     <label className="modal-label" htmlFor="name">Name</label>
                     <input name={'name'} type={'text'}/>
                     <label className="modal-label" htmlFor="description">Description</label>
                     <input name={'description'} type={'text'}/>
+                    <label className="modal-label" htmlFor="url">Image Url</label>
+                    <input name={'url'} type={'text'}/>
                 </form>
             </Dialog>
             <div className={'button-container'}>
-            <button className={'product-add-button'} type="button" onClick={this.handleOpen}>
-                Add Product
-            </button>
+                <button className={'product-add-button'} type="button" onClick={this.handleOpen}>
+                    Add Product
+                </button>
             </div>
             {fields.map((member, index) => (
                 <div key={index} className={'product-container'}>
@@ -101,38 +155,41 @@ class Product extends React.Component {
                         <div>
                             <span>Title:</span>
                             <span>{fields.get(index).title}</span>
+                            <div className={'delete-button'} onClick={() => this.deleteProduct(index)}>
+                                Delete Product
+                            </div>
                         </div>
                     </div>
                     {/*<button*/}
-                        {/*type="button"*/}
-                        {/*title="Remove Product"*/}
-                        {/*onClick={() => fields.remove(index)}*/}
+                    {/*type="button"*/}
+                    {/*title="Remove Product"*/}
+                    {/*onClick={() => fields.remove(index)}*/}
                     {/*>Remove*/}
                     {/*</button>*/}
                     {/*<h4>Product #{index + 1}</h4>*/}
                     {/*<Field*/}
-                        {/*name={`${member}.title`}*/}
-                        {/*type="text"*/}
-                        {/*component={"input"}*/}
-                        {/*label="Title"*/}
+                    {/*name={`${member}.title`}*/}
+                    {/*type="text"*/}
+                    {/*component={"input"}*/}
+                    {/*label="Title"*/}
                     {/*/>*/}
                     {/*<Field*/}
-                        {/*name={`${member}.id`}*/}
-                        {/*type="text"*/}
-                        {/*component={"input"}*/}
-                        {/*label="Id"*/}
+                    {/*name={`${member}.id`}*/}
+                    {/*type="text"*/}
+                    {/*component={"input"}*/}
+                    {/*label="Id"*/}
                     {/*/>*/}
                     {/*<Field*/}
-                        {/*name={`${member}.name`}*/}
-                        {/*type="text"*/}
-                        {/*component={"input"}*/}
-                        {/*label="Product Name"*/}
+                    {/*name={`${member}.name`}*/}
+                    {/*type="text"*/}
+                    {/*component={"input"}*/}
+                    {/*label="Product Name"*/}
                     {/*/>*/}
                     {/*<Field*/}
-                        {/*name={`${member}.description`}*/}
-                        {/*type="text"*/}
-                        {/*component={"input"}*/}
-                        {/*label="Description"*/}
+                    {/*name={`${member}.description`}*/}
+                    {/*type="text"*/}
+                    {/*component={"input"}*/}
+                    {/*label="Description"*/}
                     {/*/>*/}
                 </div>
             ))}
