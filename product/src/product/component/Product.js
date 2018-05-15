@@ -16,6 +16,7 @@ class Product extends React.Component {
         return {muiTheme: getMuiTheme(baseTheme)};
     }
 
+    //get already saved products on mount
     componentDidMount() {
         fetch('http://localhost:8000/api/getProducts', {
             method: 'GET',
@@ -60,7 +61,6 @@ class Product extends React.Component {
             }
             return product;
         }
-        return;
     }
 
     setProductDetails(data) {

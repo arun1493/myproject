@@ -6,10 +6,6 @@ import App from './App';
 import './index.css';
 import configureStore from './store/configureStore'
 
-
-// let injectTapEventPlugin = require("react-tap-event-plugin");
-// injectTapEventPlugin();
-
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
 
