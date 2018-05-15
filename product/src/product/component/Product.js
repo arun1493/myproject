@@ -1,5 +1,4 @@
 import React from 'react';
-import { Field } from 'redux-form'
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -8,6 +7,8 @@ import {PropTypes} from 'prop-types';
 import '../css/product.css';
 import 'whatwg-fetch';
 import _ from 'lodash';
+import EditIcon from 'material-ui-icons/Edit';
+import DeleteIcon from 'material-ui-icons/Delete';
 
 class Product extends React.Component {
 
@@ -33,8 +34,8 @@ class Product extends React.Component {
     }
 
     state = {
+        edit: false,
         open: false,
-        canSubmit: false
     };
 
     handleOpen = () => {
@@ -42,19 +43,33 @@ class Product extends React.Component {
     };
 
     handleClose = () => {
-        this.setState({open: false});
+        this.setState({open: false, edit: false});
         this.clearProductDetails();
+        this.editProductId = null;
+        this.editProductIndex = null;
     };
 
     getProductDetails() {
+        if(document.getElementById("productDataForm")) {
+            let elements = document.getElementById("productDataForm").elements;
+            let product = {};
+            for (let i = 0; i < elements.length; i++) {
+                let item = elements.item(i);
+                if (item.name)
+                    product[item.name] = item.value;
+            }
+            return product;
+        }
+        return;
+    }
+
+    setProductDetails(data) {
         let elements = document.getElementById("productDataForm").elements;
-        let product = {};
         for(let i = 0 ; i < elements.length ; i++){
             let item = elements.item(i);
             if(item.name)
-                product[item.name] = item.value;
+                item.value = data[item.name];
         }
-        return product;
     }
 
     clearProductDetails() {
@@ -102,7 +117,39 @@ class Product extends React.Component {
             .then((data) => {
                 that.props.fields.remove(index);
             })
+    };
 
+    editProduct = (index) => {
+        const productDetail = this.props.fields.get(index);
+        this.editProductId = productDetail._id;
+        this.editProductIndex = index;
+        this.setState({open: true, edit: true}, () => {
+            this.setProductDetails(productDetail);
+        });
+    };
+
+    updateProduct = () => {
+        const productData = this.getProductDetails();
+        const productId = this.editProductId;
+        let that = this;
+        fetch(`http://localhost:8000/api/updateProduct/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(productData)
+        })
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                that.props.fields.remove(that.editProductIndex);
+                that.props.fields.insert(that.editProductIndex, data.body);
+                that.handleClose();
+                that.clearProductDetails();
+                that.editProductId = null;
+                that.editProductIndex = null;
+            });
 
     };
 
@@ -118,8 +165,8 @@ class Product extends React.Component {
                 label="Submit"
                 primary={true}
                 keyboardFocused={true}
-                onClick={() => this.createProduct(fields)}
-            />,
+                onClick={() => this.state.edit ? this.updateProduct() : this.createProduct(fields)}
+            />
         ];
 
         return (<div>
@@ -150,47 +197,17 @@ class Product extends React.Component {
                 </button>
             </div>
             {fields.map((member, index) => (
-                <div key={index} className={'product-container'}>
-                    <div className={'product-box'}>
-                        <div>
-                            <span>Title:</span>
-                            <span>{fields.get(index).title}</span>
-                            <div className={'delete-button'} onClick={() => this.deleteProduct(index)}>
-                                Delete Product
-                            </div>
+                <div key={index} className={'product-box'}>
+                    <div>
+                        <img className={'image-conatiner'} src={fields.get(index).url} alt={'product'}/>
+                        <div className={'product-name'}>{fields.get(index).name}</div>
+                        <div className={'delete-button'} onClick={() => this.deleteProduct(index)}>
+                            <DeleteIcon/>
+                        </div>
+                        <div className={'edit-button'} onClick={() => this.editProduct(index)}>
+                            <EditIcon/>
                         </div>
                     </div>
-                    {/*<button*/}
-                    {/*type="button"*/}
-                    {/*title="Remove Product"*/}
-                    {/*onClick={() => fields.remove(index)}*/}
-                    {/*>Remove*/}
-                    {/*</button>*/}
-                    {/*<h4>Product #{index + 1}</h4>*/}
-                    {/*<Field*/}
-                    {/*name={`${member}.title`}*/}
-                    {/*type="text"*/}
-                    {/*component={"input"}*/}
-                    {/*label="Title"*/}
-                    {/*/>*/}
-                    {/*<Field*/}
-                    {/*name={`${member}.id`}*/}
-                    {/*type="text"*/}
-                    {/*component={"input"}*/}
-                    {/*label="Id"*/}
-                    {/*/>*/}
-                    {/*<Field*/}
-                    {/*name={`${member}.name`}*/}
-                    {/*type="text"*/}
-                    {/*component={"input"}*/}
-                    {/*label="Product Name"*/}
-                    {/*/>*/}
-                    {/*<Field*/}
-                    {/*name={`${member}.description`}*/}
-                    {/*type="text"*/}
-                    {/*component={"input"}*/}
-                    {/*label="Description"*/}
-                    {/*/>*/}
                 </div>
             ))}
         </div>)
